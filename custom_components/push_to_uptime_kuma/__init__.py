@@ -17,7 +17,7 @@ from .const import (
     DOMAIN,
     CONF_URL,
     CONF_INTERVAL,
-    DEFAULT_INTERVAL_MIN,
+    DEFAULT_INTERVAL_SEC,
     PLATFORMS,
     DATA_LAST_CALLED,
     DATA_INTERVAL,
@@ -48,11 +48,11 @@ class KumaPushRunner:
         self._cancel: HassJobCancel | None = None
 
     @property
-    def interval_minutes(self) -> int:
+    def interval_seconds(self) -> int:
         return _get_entry_interval(self.entry)
 
     def start(self) -> None:
-        interval = timedelta(minutes=self.interval_minutes)
+        interval = timedelta(seconds=self.interval_seconds)
         self._cancel = async_track_time_interval(
             self.hass, self._handle_tick, interval
         )
@@ -75,7 +75,7 @@ class KumaPushRunner:
                     last_called = datetime.now().astimezone()
                     data = dict(self.coordinator.data or {})
                     data[DATA_LAST_CALLED] = last_called
-                    data[DATA_INTERVAL] = self.interval_minutes
+                    data[DATA_INTERVAL] = self.interval_seconds
                     self.coordinator.async_set_updated_data(data)
                     _LOGGER.debug("Pushed to Uptime Kuma OK (%s)", resp.status)
                 else:
@@ -87,7 +87,7 @@ class KumaPushRunner:
 
 
 def _get_entry_interval(entry: ConfigEntry) -> int:
-    return int(entry.options.get(CONF_INTERVAL, entry.data.get(CONF_INTERVAL, DEFAULT_INTERVAL_MIN)))
+    return int(entry.options.get(CONF_INTERVAL, entry.data.get(CONF_INTERVAL, DEFAULT_INTERVAL_SEC)))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
