@@ -8,6 +8,9 @@ on:
       - .github/sync-labels.yml
   workflow_dispatch:
 
+permissions:
+  pull-requests: write
+
 jobs:
   labels:
     name: ♻️ Sync labels
