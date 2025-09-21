@@ -7,7 +7,8 @@
     "config_flow": true,
     "dependencies": [],
     "documentation": "https://github.com/UnoSite/PushToUptimeKuma",
-    "iot_class": "cloud_polling",
+    "iot_class": "cloud_push",
+    "integration_type": "service",
     "issue_tracker": "https://github.com/UnoSite/PushToUptimeKuma/issues",
     "loggers": [
         "custom_components.push_to_uptime_kuma"
