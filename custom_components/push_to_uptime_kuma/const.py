@@ -3,9 +3,11 @@ from __future__ import annotations
 DOMAIN = "push_to_uptime_kuma"
 
 CONF_URL = "url"
-CONF_INTERVAL = "interval"  # minutes
+CONF_INTERVAL = "interval"  # seconds
 
-DEFAULT_INTERVAL_MIN = 5
+DEFAULT_INTERVAL_SEC = 60
+MIN_INTERVAL_SEC = 20
+MAX_INTERVAL_SEC = 86400  # 24 hours
 
 PLATFORMS = ["sensor"]
 
