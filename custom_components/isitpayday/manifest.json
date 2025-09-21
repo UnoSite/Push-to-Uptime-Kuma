@@ -1,0 +1,17 @@
+{
+    "domain": "PushToUptimeKuma",
+    "name": "Push To Uptime Kuma",
+    "codeowners": [
+        "@UnoSite"
+    ],
+    "config_flow": true,
+    "dependencies": [],
+    "documentation": "https://github.com/UnoSite/PushToUptimeKuma",
+    "iot_class": "cloud_polling",
+    "issue_tracker": "https://github.com/UnoSite/PushToUptimeKuma/issues",
+    "loggers": [
+        "custom_components.PushToUptimeKuma"
+    ],
+    "requirements": [],
+    "version": "1.0.0"
+}
