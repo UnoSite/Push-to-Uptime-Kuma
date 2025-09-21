@@ -4,14 +4,15 @@ import voluptuous as vol
 from urllib.parse import urlparse
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     DOMAIN,
     CONF_URL,
     CONF_INTERVAL,
-    DEFAULT_INTERVAL_MIN,
+    DEFAULT_INTERVAL_SEC,
+    MIN_INTERVAL_SEC,
+    MAX_INTERVAL_SEC,
 )
 
 def _normalize_url(value: str) -> str:
@@ -30,10 +31,9 @@ class PushToUptimeKumaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 url = _normalize_url(user_input[CONF_URL])
                 interval = int(user_input[CONF_INTERVAL])
-                if interval <= 0:
-                    raise vol.Invalid("Interval must be positive")
+                if interval < MIN_INTERVAL_SEC or interval > MAX_INTERVAL_SEC:
+                    raise vol.Invalid("Interval out of range")
 
-                # unique_id = full URL
                 await self.async_set_unique_id(url)
                 self._abort_if_unique_id_configured()
 
@@ -50,7 +50,7 @@ class PushToUptimeKumaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(CONF_URL): str,
-                vol.Required(CONF_INTERVAL, default=DEFAULT_INTERVAL_MIN): int,
+                vol.Required(CONF_INTERVAL, default=DEFAULT_INTERVAL_SEC): int,
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
@@ -68,14 +68,14 @@ class PushToUptimeKumaOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             try:
                 interval = int(user_input[CONF_INTERVAL])
-                if interval <= 0:
-                    raise vol.Invalid("Interval must be positive")
+                if interval < MIN_INTERVAL_SEC or interval > MAX_INTERVAL_SEC:
+                    raise vol.Invalid("Interval out of range")
                 return self.async_create_entry(title="", data={CONF_INTERVAL: interval})
             except vol.Invalid:
                 errors["base"] = "invalid_input"
 
         current_interval = self.config_entry.options.get(
-            CONF_INTERVAL, self.config_entry.data.get(CONF_INTERVAL, DEFAULT_INTERVAL_MIN)
+            CONF_INTERVAL, self.config_entry.data.get(CONF_INTERVAL, DEFAULT_INTERVAL_SEC)
         )
         schema = vol.Schema({vol.Required(CONF_INTERVAL, default=current_interval): int})
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
