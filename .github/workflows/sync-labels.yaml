@@ -8,6 +8,9 @@ on:
       - .github/sync-labels.yml
   workflow_dispatch:
 
+permissions:
+  pull-requests: write
+
 jobs:
   labels:
     name: ♻️ Sync labels
@@ -17,7 +20,7 @@ jobs:
         uses: actions/checkout@v5.0.0
 
       - name: 🚀 Run Label Syncer
-        uses: micnncim/action-label-syncer@v1.3.0
+        uses: brpaz/action-label-syncer@0.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
