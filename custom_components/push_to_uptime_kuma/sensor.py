@@ -15,6 +15,29 @@ from .const import (
     DATA_NETLOC,
 )
 
+
+def _format_interval(seconds: int) -> str:
+    """Return a human readable string for the interval."""
+    if seconds < 60:
+        return f"{seconds}s"
+    elif seconds < 3600:
+        minutes = seconds // 60
+        sec = seconds % 60
+        return f"{minutes}m {sec}s" if sec else f"{minutes}m"
+    else:
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        sec = seconds % 60
+        parts = []
+        if hours:
+            parts.append(f"{hours}h")
+        if minutes:
+            parts.append(f"{minutes}m")
+        if sec:
+            parts.append(f"{sec}s")
+        return " ".join(parts)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator: DataUpdateCoordinator = data["coordinator"]
@@ -70,3 +93,10 @@ class PushToUptimeKumaIntervalSensor(_BaseKumaSensor):
     @property
     def native_value(self) -> int | None:
         return int(self.coordinator.data.get(DATA_INTERVAL, 0))
+
+    @property
+    def extra_state_attributes(self):
+        seconds = self.native_value or 0
+        return {
+            "human_readable": _format_interval(seconds)
+    }
