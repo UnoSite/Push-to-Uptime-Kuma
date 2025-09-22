@@ -1,37 +1,39 @@
 name: Release
 
 on:
+  workflow_dispatch:
   release:
-    types: 
-      - published
+    types: [published]
 
-permissions: {}
+env:
+  COMPONENT_DIR: push_to_uptime_kuma
 
 jobs:
   release_zip_file:
     name: Prepare release asset
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v5.0.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-        
       - name: Update manifest.json version to ${{ github.event.release.tag_name }}
-        shell: bash
         run: |
-          yq -i -o json '.version="${{ github.event.release.tag_name }}"' \
-            "${{ github.workspace }}/custom_components/PushToUptimeKuma/manifest.json"
-
-      - name: ZIP the integration directory
-        shell: bash
+          python3 ${{ github.workspace }}/.github/scripts/update_hacs_manifest.py --version ${{ github.event.release.tag_name }} --path /custom_components/push_to_uptime_kuma/
+      - name: Commit manifest update
         run: |
-          cd "${{ github.workspace }}/custom_components/PushToUptimeKuma"
-          zip PushToUptimeKuma.zip -r ./
-
-      - name: Upload the ZIP file to the release
-        uses: softprops/action-gh-release@v2.3.3
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add ./custom_components/push_to_uptime_kuma/manifest.json
+          git commit -m "Updated manifest.json"
+          git push origin HEAD:main
+      - name: Create zip
+        run: |
+          cd custom_components/push_to_uptime_kuma
+          zip push_to_uptime_kuma.zip -r ./
+      - name: Upload zip to release
+        uses: svenstaro/upload-release-action@2.11.2
         with:
-          files: ${{ github.workspace }}/custom_components/PushToUptimeKuma/PushToUptimeKuma.zip
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./custom_components/push_to_uptime_kuma/push_to_uptime_kuma.zip
+          asset_name: push_to_uptime_kuma.zip
+          tag: ${{ github.ref }}
+          overwrite: true
