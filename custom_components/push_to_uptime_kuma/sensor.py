@@ -60,7 +60,7 @@ class PushToUptimeKumaLastCalledSensor(_BaseKumaSensor):
 
 class PushToUptimeKumaIntervalSensor(_BaseKumaSensor):
     _attr_name = "Call interval"
-    _attr_native_unit_of_measurement = "min"
+    _attr_native_unit_of_measurement = "s"
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, coordinator: DataUpdateCoordinator, entry_id: str, netloc: str):
