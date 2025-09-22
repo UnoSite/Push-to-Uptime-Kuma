@@ -6,10 +6,10 @@
     ],
     "config_flow": true,
     "dependencies": [],
-    "documentation": "https://github.com/UnoSite/PushToUptimeKuma",
+    "documentation": "https://github.com/UnoSite/push_to_uptime_kuma",
     "integration_type": "service",
     "iot_class": "cloud_push",
-    "issue_tracker": "https://github.com/UnoSite/PushToUptimeKuma/issues",
+    "issue_tracker": "https://github.com/UnoSite/push_to_uptime_kuma/issues",
     "loggers": [
         "custom_components.push_to_uptime_kuma"
     ],
