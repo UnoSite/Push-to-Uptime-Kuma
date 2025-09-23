@@ -18,10 +18,14 @@ from .const import (
 
 
 def _normalize_url(value: str) -> str:
+    """Ensure the URL is valid and contains scheme + netloc."""
     value = value.strip()
+    # If user forgot scheme, add https://
+    if not value.startswith(("http://", "https://")):
+        value = "https://" + value
     parsed = urlparse(value)
     if not parsed.scheme or not parsed.netloc:
-        raise vol.Invalid("Invalid URL")
+        raise vol.Invalid("invalid_url")
     return value
 
 
@@ -33,10 +37,20 @@ class PushToUptimeKumaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 url = _normalize_url(user_input[CONF_URL])
-                interval = int(user_input[CONF_INTERVAL])
-                if interval < MIN_INTERVAL_SEC or interval > MAX_INTERVAL_SEC:
-                    raise vol.Invalid("Interval out of range")
+            except vol.Invalid:
+                errors["base"] = "invalid_url"
+                url = None
 
+            interval: int | None = None
+            if not errors:
+                try:
+                    interval = int(user_input[CONF_INTERVAL])
+                    if interval < MIN_INTERVAL_SEC or interval > MAX_INTERVAL_SEC:
+                        raise vol.Invalid("invalid_interval")
+                except (ValueError, vol.Invalid):
+                    errors["base"] = "invalid_interval"
+
+            if not errors and url and interval is not None:
                 await self.async_set_unique_id(url)
                 self._abort_if_unique_id_configured()
 
@@ -47,8 +61,6 @@ class PushToUptimeKumaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_INTERVAL: interval,
                     },
                 )
-            except vol.Invalid:
-                errors["base"] = "invalid_input"
 
         schema = vol.Schema(
             {
@@ -77,10 +89,10 @@ class PushToUptimeKumaOptionsFlowHandler(config_entries.OptionsFlow):
             try:
                 interval = int(user_input[CONF_INTERVAL])
                 if interval < MIN_INTERVAL_SEC or interval > MAX_INTERVAL_SEC:
-                    raise vol.Invalid("Interval out of range")
+                    raise vol.Invalid("invalid_interval")
                 return self.async_create_entry(title="", data={CONF_INTERVAL: interval})
-            except vol.Invalid:
-                errors["base"] = "invalid_input"
+            except (ValueError, vol.Invalid):
+                errors["base"] = "invalid_interval"
 
         current_interval = self.config_entry.options.get(
             CONF_INTERVAL, self.config_entry.data.get(CONF_INTERVAL, DEFAULT_INTERVAL_SEC)
