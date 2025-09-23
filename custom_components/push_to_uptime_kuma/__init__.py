@@ -24,6 +24,7 @@ from .const import (
     DATA_INTERVAL,
     DATA_URL,
     DATA_NETLOC,
+    DATA_PING_MS,
     LOGGER_NAME,
 )
 
@@ -35,7 +36,7 @@ type HassJobCancel = Callable[[], None]
 
 
 class KumaPushRunner:
-    """Handles periodic HTTP push."""
+    """Handles periodic HTTP push to Uptime Kuma."""
 
     def __init__(
         self,
@@ -85,7 +86,9 @@ class KumaPushRunner:
             query["msg"] = "Home Assistant"
             query["ping"] = str(elapsed_ms)
 
-            new_url = urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
+            new_url = urlunsplit(
+                (parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment)
+            )
 
             async with session.get(new_url, timeout=aiohttp.ClientTimeout(total=15)) as resp2:
                 if 200 <= resp2.status < 300:
@@ -93,19 +96,30 @@ class KumaPushRunner:
                     data = dict(self.coordinator.data or {})
                     data[DATA_LAST_CALLED] = last_called
                     data[DATA_INTERVAL] = self.interval_seconds
+                    data[DATA_PING_MS] = elapsed_ms
                     self.coordinator.async_set_updated_data(data)
-                    _LOGGER.debug("Pushed to Uptime Kuma OK (%s, %sms)", resp2.status, elapsed_ms)
+                    _LOGGER.debug(
+                        "Pushed to Uptime Kuma OK (status=%s, ping=%sms)",
+                        resp2.status,
+                        elapsed_ms,
+                    )
                 else:
-                    _LOGGER.warning("Uptime Kuma push returned status %s", resp2.status)
+                    _LOGGER.warning(
+                        "Uptime Kuma push returned status %s for URL %s",
+                        resp2.status,
+                        new_url,
+                    )
 
         except asyncio.TimeoutError:
-            _LOGGER.warning("Timeout pushing to Uptime Kuma")
+            _LOGGER.warning("Timeout pushing to Uptime Kuma (%s)", base_url)
         except aiohttp.ClientError as err:
-            _LOGGER.warning("HTTP error pushing to Uptime Kuma: %s", err)
+            _LOGGER.warning("HTTP error pushing to Uptime Kuma (%s): %s", base_url, err)
 
 
 def _get_entry_interval(entry: ConfigEntry) -> int:
-    return int(entry.options.get(CONF_INTERVAL, entry.data.get(CONF_INTERVAL, DEFAULT_INTERVAL_SEC)))
+    return int(
+        entry.options.get(CONF_INTERVAL, entry.data.get(CONF_INTERVAL, DEFAULT_INTERVAL_SEC))
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -123,6 +137,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_INTERVAL: _get_entry_interval(entry),
         DATA_URL: entry.data[CONF_URL],
         DATA_NETLOC: netloc,
+        DATA_PING_MS: None,
     }
 
     runner = KumaPushRunner(hass, entry, coordinator)
