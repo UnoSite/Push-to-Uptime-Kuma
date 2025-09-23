@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import callback
 
 from .const import (
     DOMAIN,
@@ -15,12 +16,14 @@ from .const import (
     MAX_INTERVAL_SEC,
 )
 
+
 def _normalize_url(value: str) -> str:
     value = value.strip()
     parsed = urlparse(value)
     if not parsed.scheme or not parsed.netloc:
         raise vol.Invalid("Invalid URL")
     return value
+
 
 class PushToUptimeKumaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
@@ -58,6 +61,11 @@ class PushToUptimeKumaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input: dict | None = None) -> FlowResult:
         return await self.async_step_user(user_input)
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: config_entries.ConfigEntry):
+        return PushToUptimeKumaOptionsFlowHandler(config_entry)
+
 
 class PushToUptimeKumaOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
@@ -79,7 +87,3 @@ class PushToUptimeKumaOptionsFlowHandler(config_entries.OptionsFlow):
         )
         schema = vol.Schema({vol.Required(CONF_INTERVAL, default=current_interval): int})
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
-
-
-async def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> PushToUptimeKumaOptionsFlowHandler:
-    return PushToUptimeKumaOptionsFlowHandler(config_entry)
