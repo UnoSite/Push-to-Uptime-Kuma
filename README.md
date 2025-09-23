@@ -17,13 +17,37 @@
 
 # 📌 Overview
 
-...
+Home Assistant integration for sending periodic push requests to [Uptime Kuma](https://github.com/louislam/uptime-kuma), with sensors for last call and interval.
 
 ---
 
 ## 🚀 Features
 
-...
+- Setup via Home Assistant UI (Config Flow)  
+- Supports multiple instances (one device per push URL)  
+- Choose interval from **20 seconds up to 24 hours**  
+- Each device provides two sensors:  
+  - **Last called** – timestamp of the last successful push  
+  - **Call interval** – interval in seconds + human-readable format
+
+---
+
+## 📥 Installation
+
+### **1. Manual Installation**
+1. **Download the latest release** from the [GitHub releases](https://github.com/UnoSite/push_to_uptime_kuma/releases).
+2. **Copy the `push_to_uptime_kuma` folder** into your Home Assistant `custom_components` directory.
+3. **Restart Home Assistant.**
+4. **Add the integration:**
+   - Navigate to **Settings > Devices & Services > Integrations**.
+   - Click **Add Integration** and search for **Push To Uptime Kuma**.
+  
+### **2. HACS Installation (Recommended)**
+1. Add this repository as a **custom repository** in [HACS](https://hacs.xyz/).
+2. Search for **Push To Uptime Kuma** in HACS and install the integration.
+3. Restart Home Assistant.
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=UnoSite&repository=push_to_uptime_kuma&category=Integration)
 
 ---
 
