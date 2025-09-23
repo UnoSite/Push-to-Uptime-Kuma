@@ -14,5 +14,5 @@
         "custom_components.push_to_uptime_kuma"
     ],
     "requirements": [],
-    "version": "0.1.5"
+    "version": "0.1.6"
 }
