@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from datetime import datetime, timedelta
 from typing import Callable
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlsplit, urlunsplit, parse_qsl, urlencode
 
 import aiohttp
 from homeassistant.config_entries import ConfigEntry
@@ -67,19 +68,36 @@ class KumaPushRunner:
         await self._do_push_and_update()
 
     async def _do_push_and_update(self) -> None:
-        url: str = self.entry.data[CONF_URL]
+        """Send push with msg=Home Assistant and measured ping in ms."""
+        base_url: str = self.entry.data[CONF_URL]
         session = aiohttp_client.async_get_clientsession(self.hass)
+
         try:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=15)) as resp:
-                if 200 <= resp.status < 300:
+            # Measure ping time
+            start = time.monotonic()
+            async with session.get(base_url, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                elapsed_ms = int((time.monotonic() - start) * 1000)
+
+            # Rebuild URL with enforced query params
+            parts = urlsplit(base_url)
+            query = dict(parse_qsl(parts.query))
+            query["status"] = "up"
+            query["msg"] = "Home Assistant"
+            query["ping"] = str(elapsed_ms)
+
+            new_url = urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
+
+            async with session.get(new_url, timeout=aiohttp.ClientTimeout(total=15)) as resp2:
+                if 200 <= resp2.status < 300:
                     last_called = datetime.now().astimezone()
                     data = dict(self.coordinator.data or {})
                     data[DATA_LAST_CALLED] = last_called
                     data[DATA_INTERVAL] = self.interval_seconds
                     self.coordinator.async_set_updated_data(data)
-                    _LOGGER.debug("Pushed to Uptime Kuma OK (%s)", resp.status)
+                    _LOGGER.debug("Pushed to Uptime Kuma OK (%s, %sms)", resp2.status, elapsed_ms)
                 else:
-                    _LOGGER.warning("Uptime Kuma push returned status %s", resp.status)
+                    _LOGGER.warning("Uptime Kuma push returned status %s", resp2.status)
+
         except asyncio.TimeoutError:
             _LOGGER.warning("Timeout pushing to Uptime Kuma")
         except aiohttp.ClientError as err:
