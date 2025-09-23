@@ -16,5 +16,6 @@ DATA_LAST_CALLED = "last_called"
 DATA_INTERVAL = "interval"
 DATA_URL = "url"
 DATA_NETLOC = "netloc"
+DATA_PING_MS = "ping_ms"  # last measured response time in ms
 
 LOGGER_NAME = f"custom_components.{DOMAIN}"
