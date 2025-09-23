@@ -13,6 +13,7 @@ from .const import (
     DATA_LAST_CALLED,
     DATA_INTERVAL,
     DATA_NETLOC,
+    DATA_PING_MS,
 )
 
 
@@ -46,6 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     entities: list[SensorEntity] = [
         PushToUptimeKumaLastCalledSensor(coordinator, entry.entry_id, netloc),
         PushToUptimeKumaIntervalSensor(coordinator, entry.entry_id, netloc),
+        PushToUptimeKumaPingSensor(coordinator, entry.entry_id, netloc),
     ]
     async_add_entities(entities)
 
@@ -99,4 +101,18 @@ class PushToUptimeKumaIntervalSensor(_BaseKumaSensor):
         seconds = self.native_value or 0
         return {
             "human_readable": _format_interval(seconds)
-    }
+        }
+
+
+class PushToUptimeKumaPingSensor(_BaseKumaSensor):
+    _attr_name = "Ping time"
+    _attr_native_unit_of_measurement = "ms"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, coordinator: DataUpdateCoordinator, entry_id: str, netloc: str):
+        super().__init__(coordinator, entry_id, netloc)
+        self._attr_unique_id = f"{entry_id}_ping_ms"
+
+    @property
+    def native_value(self) -> int | None:
+        return self.coordinator.data.get(DATA_PING_MS)
