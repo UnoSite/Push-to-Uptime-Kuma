@@ -65,8 +65,8 @@ class _BaseKumaSensor(CoordinatorEntity, SensorEntity):
         return DeviceInfo(
             identifiers={(DOMAIN, self._entry_id)},
             name=self._netloc,
-            manufacturer="Uptime Kuma",
-            model="Push Monitor",
+            manufacturer="UnoSite",
+            model="Push To Uptime Kuma",
         )
 
 
